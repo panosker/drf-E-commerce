@@ -27,6 +27,15 @@ class CategoryViewSet(viewsets.ViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(request=CategorySerializer, responses=CategorySerializer)
+    def retrieve(self, request, pk):
+        try:
+            retrieved_category = Category.objects.get(pk=pk)
+        except Category.DoesNotExist:
+            return Response({"error": "Category not found"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = CategorySerializer(retrieved_category)
+        return Response(serializer.data)
+
 
 class BrandViewSet(viewsets.ViewSet):
     """
@@ -47,6 +56,15 @@ class BrandViewSet(viewsets.ViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @extend_schema(request=BrandSerializer, responses=BrandSerializer)
+    def retrieve(self, request, pk):
+        try:
+            retrieved_brand = Brand.objects.get(pk=pk)
+        except Brand.DoesNotExist:
+            return Response({"error": "Brand not found"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = BrandSerializer(retrieved_brand)
+        return Response(serializer.data)
 
 
 class ProductViewSet(viewsets.ViewSet):
@@ -82,3 +100,13 @@ class ProductViewSet(viewsets.ViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # retrieve each product separately
+    @extend_schema(request=ProductSerializer, responses=ProductSerializer)
+    def retrieve(self, request, pk):
+        try:
+            retrieved_product = Product.objects.get(pk=pk)
+        except Product.DoesNotExist:
+            return Response({"error": "Product not found"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = ProductSerializer(retrieved_product)
+        return Response(serializer.data)
