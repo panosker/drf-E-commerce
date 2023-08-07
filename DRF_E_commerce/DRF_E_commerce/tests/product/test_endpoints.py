@@ -40,4 +40,5 @@ class TestProductEndpoints:
         product_factory.create_batch(4)
         response = api_client().get(self.endpoint)
         assert response.status_code == 200
+        # we can change
         assert len(json.loads(response.content)) == 4
