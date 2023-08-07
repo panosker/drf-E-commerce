@@ -16,9 +16,10 @@ class BrandSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    # the Product model has 2 foreign keys , we need to serialize them both
-    brand = BrandSerializer()
-    category = CategorySerializer()
+    # Instead of using BrandSerializer and CategorySerializer here,
+    # you should specify the respective field names as 'slug' or 'id'
+    brand = serializers.SlugRelatedField(slug_field="names", queryset=Brand.objects.all())
+    category = serializers.SlugRelatedField(slug_field="names", queryset=Category.objects.all())
 
     class Meta:
         model = Product
