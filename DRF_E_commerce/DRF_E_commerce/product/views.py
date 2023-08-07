@@ -28,13 +28,28 @@ class CategoryViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(request=CategorySerializer, responses=CategorySerializer)
-    def retrieve(self, request, pk):
+    def retrieve(self, request, pk=None):
         try:
             retrieved_category = Category.objects.get(pk=pk)
         except Category.DoesNotExist:
             return Response({"error": "Category not found"}, status=status.HTTP_400_BAD_REQUEST)
         serializer = CategorySerializer(retrieved_category)
         return Response(serializer.data)
+
+    @extend_schema(request=CategorySerializer, responses=CategorySerializer)
+    def update(self, request, pk=None):
+        try:
+            requested_data = Category.objects.get(pk=pk)
+        except Category.DoesNotExist:
+            return Response(
+                {"error": "Category does not exists,please try again"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        serializer = CategorySerializer(requested_data, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class BrandViewSet(viewsets.ViewSet):
@@ -58,13 +73,29 @@ class BrandViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(request=BrandSerializer, responses=BrandSerializer)
-    def retrieve(self, request, pk):
+    def retrieve(self, request, pk=None):
         try:
             retrieved_brand = Brand.objects.get(pk=pk)
         except Brand.DoesNotExist:
             return Response({"error": "Brand not found"}, status=status.HTTP_400_BAD_REQUEST)
         serializer = BrandSerializer(retrieved_brand)
         return Response(serializer.data)
+
+    @extend_schema(request=BrandSerializer, responses=BrandSerializer)
+    def update(self, request, pk):
+        try:
+            requested_data = Brand.objects.get(pk=pk)
+        except Brand.DoesNotExist:
+            return Response(
+                {"error": "The Brand you requested can not be found"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = BrandSerializer(requested_data, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProductViewSet(viewsets.ViewSet):
@@ -110,3 +141,31 @@ class ProductViewSet(viewsets.ViewSet):
             return Response({"error": "Product not found"}, status=status.HTTP_400_BAD_REQUEST)
         serializer = ProductSerializer(retrieved_product)
         return Response(serializer.data)
+
+    @extend_schema(request=ProductSerializer, responses=ProductSerializer)
+    def update(self, request, pk):
+        try:
+            requested_data = Product.objects.get(pk=pk)
+        except Product.DoesNotExist:
+            return Response(
+                {"error": "Product does not exists"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        updated_data = request.data
+        brand_name = updated_data["brand"]
+        updated_brand, _ = Brand.objects.get_or_create(names=brand_name)
+        category_name = updated_data["category"]
+        updated_category, _ = Category.objects.get_or_create(names=category_name)
+
+        product_data = {
+            "names": updated_data["names"],
+            "description": updated_data["description"],
+            "is_digital": updated_data["is_digital"],
+            "brand": updated_brand,
+            "category": updated_category,
+        }
+        serializer = ProductSerializer(requested_data, product_data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
