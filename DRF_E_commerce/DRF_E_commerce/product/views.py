@@ -51,6 +51,30 @@ class CategoryViewSet(viewsets.ViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(request=CategorySerializer, responses=CategorySerializer)
+    def partial_update(self, request, pk=None):
+        try:
+            requested_data = Category.objects.get(pk=pk)
+        except Category.DoesNotExist:
+            return Response(
+                {"error": "Category does not exists,please try again"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        serializer = CategorySerializer(requested_data, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @extend_schema(request=CategorySerializer,responses=CategorySerializer)
+    def destroy(self,request,pk=None):
+        try:
+            data_to_destroy=Category.objects.get(pk=pk)
+        except Category.DoesNotExist:
+            return Response("error":"Category not found",status=status.HTTP_400_BAD_REQUEST)
+        data_to_destroy.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class BrandViewSet(viewsets.ViewSet):
     """
@@ -96,6 +120,32 @@ class BrandViewSet(viewsets.ViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @extend_schema(request=BrandSerializer, responses=BrandSerializer)
+    def partial_update(self, request, pk):
+        try:
+            requested_data = Brand.objects.get(pk=pk)
+        except Brand.DoesNotExist:
+            return Response(
+                {"error": "The Brand you requested can not be found"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = BrandSerializer(requested_data, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def destroy(self,request,pk):
+        try:
+            data_to_destroy=Brand.objects.get(pk=pk)
+        except Brand.DoesNotExist:
+            return Response("error":"Brand not found",status=status.HTTP_400_BAD_REQUEST)
+        
+        data_to_destroy.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
 
 
 class ProductViewSet(viewsets.ViewSet):
@@ -169,3 +219,40 @@ class ProductViewSet(viewsets.ViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @extend_schema(request=ProductSerializer, responses=ProductSerializer)
+    def partial_update(self, request, pk):
+        try:
+            requested_data = Product.objects.get(pk=pk)
+        except Product.DoesNotExist:
+            return Response(
+                {"error": "Product does not exists"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        updated_data = request.data
+        brand_name = updated_data["brand"]
+        updated_brand, _ = Brand.objects.get_or_create(names=brand_name)
+        category_name = updated_data["category"]
+        updated_category, _ = Category.objects.get_or_create(names=category_name)
+
+        product_data = {
+            "names": updated_data["names"],
+            "description": updated_data["description"],
+            "is_digital": updated_data["is_digital"],
+            "brand": updated_brand,
+            "category": updated_category,
+        }
+        serializer = ProductSerializer(requested_data, product_data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @extend_schema(responses=ProductSerializer)
+    def destroy(self,request,pk=None):
+        try:
+            data_to_destroy=Product.objects.get(pk=pk)
+        except Product.DoesNotExist:
+            return Response("error":"Product not found",status=status.HTTP_400_BAD_REQUEST)
+        data_to_destroy.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
