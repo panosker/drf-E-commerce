@@ -123,16 +123,15 @@ class BrandViewSet(viewsets.ViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def destroy(self,request,pk):
+
+    def destroy(self, request, pk):
         try:
-            data_to_destroy=Brand.objects.get(pk=pk)
+            data_to_destroy = Brand.objects.get(pk=pk)
         except Brand.DoesNotExist:
-            return Response("error":"Brand not found",status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response({"error": "Brand not found"}, status=status.HTTP_400_BAD_REQUEST)
+
         data_to_destroy.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
 
 
 class ProductViewSet(viewsets.ViewSet):
@@ -150,8 +149,8 @@ class ProductViewSet(viewsets.ViewSet):
     @extend_schema(request=ProductSerializer, responses=ProductSerializer)
     def create(self, request, *args, **kwargs):
         new_data = request.data
-        brand_name = new_data["brand"]["names"]
-        category_name = new_data["category"]["names"]
+        brand_name = new_data["brand"]
+        category_name = new_data["category"]
 
         newbrand, _ = Brand.objects.get_or_create(names=brand_name)
         newcategory, _ = Category.objects.get_or_create(names=category_name)
@@ -236,10 +235,10 @@ class ProductViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(responses=ProductSerializer)
-    def destroy(self,request,pk=None):
+    def destroy(self, request, pk=None):
         try:
-            data_to_destroy=Product.objects.get(pk=pk)
+            data_to_destroy = Product.objects.get(pk=pk)
         except Product.DoesNotExist:
-            return Response("error":"Product not found",status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Product not found"}, status=status.HTTP_400_BAD_REQUEST)
         data_to_destroy.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
