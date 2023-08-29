@@ -39,13 +39,11 @@ class CategoryViewSet(viewsets.ViewSet):
     @extend_schema(request=CategorySerializer, responses=CategorySerializer)
     def update(self, request, pk=None):
         try:
-            requested_data = Category.objects.get(pk=pk)
+            category = Category.objects.get(pk=pk)
         except Category.DoesNotExist:
-            return Response(
-                {"error": "Category does not exists,please try again"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        serializer = CategorySerializer(requested_data, data=request.data)
+            return Response({"error": "Category not found"}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = CategorySerializer(category, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -54,26 +52,15 @@ class CategoryViewSet(viewsets.ViewSet):
     @extend_schema(request=CategorySerializer, responses=CategorySerializer)
     def partial_update(self, request, pk=None):
         try:
-            requested_data = Category.objects.get(pk=pk)
+            category = Category.objects.get(pk=pk)
         except Category.DoesNotExist:
-            return Response(
-                {"error": "Category does not exists,please try again"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        serializer = CategorySerializer(requested_data, data=request.data, partial=True)
+            return Response({"error": "Category not found"}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = CategorySerializer(category, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    @extend_schema(request=CategorySerializer,responses=CategorySerializer)
-    def destroy(self,request,pk=None):
-        try:
-            data_to_destroy=Category.objects.get(pk=pk)
-        except Category.DoesNotExist:
-            return Response("error":"Category not found",status=status.HTTP_400_BAD_REQUEST)
-        data_to_destroy.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class BrandViewSet(viewsets.ViewSet):
